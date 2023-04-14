@@ -114,7 +114,6 @@ int main(int args, char *argv[]){
 			}
 			t0 = clock() - t0;
 			time = ((double)t0)/CLOCKS_PER_SEC;
-			printf("--------------------------------------------\n");
 		    	printf("Solved!\n");
 			printf("Solutions: %d\n", solutions);
 			printf("Queens : %d\n", queens);

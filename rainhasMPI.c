@@ -36,9 +36,7 @@ int main(int args, char *argv[]){
 	
 	queens = atoi(argv[1]);
 	threads = atoi(argv[2]);
-#ifdef _OPENMP
-	omp_set_num_threads(threads);
-#endif	
+	
 	// Creates the board for the problem
 	mat = malloc(queens * sizeof(int*));
 	for (i=0;i < queens;i++){
@@ -50,6 +48,15 @@ int main(int args, char *argv[]){
 			mat[i][j] = 0 ;
 		}
 	}
+	
+//defining OMP MPI
+#ifdef _OPENMP
+	omp_set_num_threads(threads);
+	MPI_Init(&argc,&argv);
+	MPI_Comm_size(MPI_COMM_WORLD, &worldSize); // get number of processes
+	MPI_Comm_rank(MPI_COMM_WORLD, &myrank); // get current process id
+#endif	
+	
 	printf("--------------------------------------------\n");
     	printf("Solving N-Queen\n");
     	printf("--------------------------------------------\n");
@@ -91,12 +98,16 @@ int main(int args, char *argv[]){
 	printf("Board size: %d\n", queens*queens);
 #ifdef _OPENMP
 	printf("Number of threads: %d\n", threads);
+	MPI_Finalize();
 #else
 	printf("Number of threads: %d\n", 0);
 #endif
 	printf("Time(in seconds): %f\n", time);
+	
+	
 	return 0;
 }
+
 
 // Put a queen in the board
 void put_queen(int **mat, int queens, int positioned){

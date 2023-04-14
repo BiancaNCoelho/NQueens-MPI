@@ -51,19 +51,18 @@ int main(int args, char *argv[]){
 	
 //defining OMP-MPI or sequential
 #ifdef _OPENMP
-	omp_set_num_threads(threads);
+	omp_set_num_threads(threads); // set number of threads
 	MPI_Init(&args,&argv); /* initialize MPI thread 
-									MPI_Init() -> THREAD_SINGLE*/	
+				MPI_Init() -> THREAD_SINGLE*/	
 	MPI_Comm_size(MPI_COMM_WORLD, &size); /* get number of processes --
 							returns the total number of processes*/
 	MPI_Comm_rank(MPI_COMM_WORLD, &rank); /* get current process id --
 						 returns the rank of the calling MPI process */
 #endif	
-	
 	printf("--------------------------------------------\n");
     	printf("Solving N-Queen\n");
     	printf("--------------------------------------------\n");
-	
+    	
 	t = clock();
 	// SOLUTION IS SIMPLE FOR N = 1
 	if(queens == 1 ){
@@ -84,23 +83,22 @@ int main(int args, char *argv[]){
 	#pragma omp single
 	{
 		if (rank != 0){
-			put_queen(mat,rank-1,0);
+			put_queen(mat,queens,0);
 			MPI_Send(&solutions, 1, MPI_INT, 0, 0, MPI_COMM_WORLD);
 		}else{
-			for(int i = 0; i < size; i++){
+			for(int i = 0; i < size-1; i++){
 				int answer;
 				MPI_Recv(&answer, 1, MPI_INT, MPI_ANY_SOURCE,0,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
 				solutions += answer;
 			}
+		
 		}
 	}
 }
 }
 // End of parallel region
-
 	t = clock() - t;
 	time = ((double)t)/CLOCKS_PER_SEC;
-
 	printf("--------------------------------------------\n");
     	printf("Solved!\n");
 	printf("Solutions: %d\n", solutions);
@@ -126,7 +124,6 @@ void put_queen(int **mat, int queens, int positioned){
 		{
 			++solutions;
 		}
-		return;
 	} 
 	for(i = 0; i < queens; i++){	
 		if (check_queen(mat, queens,positioned,i)){

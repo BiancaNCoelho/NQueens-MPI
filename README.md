@@ -14,7 +14,7 @@ Compile:
  
 Run:
  
- > TO DO
+ > mpirun -np numberOfProcessors ./rainhasMPI numberOfQueens numberOfThreads
  
 # Contributor(s)
  

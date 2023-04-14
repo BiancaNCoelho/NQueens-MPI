@@ -15,7 +15,6 @@
 	#include <mpi.h>
 #endif
 
-void show_board(int **mat, int queens);
 bool check_queen(int **mat, int queens, int row, int column);
 void put_queen(int **mat, int queens, int position);
 
@@ -29,7 +28,7 @@ int main(int args, char *argv[]){
 	}
 	
 	int queens, threads;
-	int rank, size, provided; 
+	int rank, size; 
 	int **mat;
 	int i,j;
 	double time;
@@ -50,10 +49,10 @@ int main(int args, char *argv[]){
 		}
 	}
 	
-//defining OMP MPI or sequential
+//defining OMP-MPI or sequential
 #ifdef _OPENMP
 	omp_set_num_threads(threads);
-	MPI_Init_thread(&args,&argv,MPI_THREAD_FUNNELED, &provided); /* initialize MPI thread 
+	MPI_Init(&args,&argv); /* initialize MPI thread 
 									MPI_Init() -> THREAD_SINGLE*/	
 	MPI_Comm_size(MPI_COMM_WORLD, &size); /* get number of processes --
 							returns the total number of processes*/
@@ -70,13 +69,11 @@ int main(int args, char *argv[]){
 	if(queens == 1 ){
 		++solutions;
 		mat[0][0] = 1;
-		//show_board(mat,queens);
 	}
 	
 	// DOES NOT EXIST A SOLUTION FOR N = 2 AND N = 3
 	if(queens == 2 || queens == 3){
 		solutions = 0;
-		//show_board(mat,queens);
 	}
 	
 	// CASE N > 3, CACULATE THE NUMBER OF SOLUTIONS POSSIBLE AND PRINT BOARD
@@ -86,15 +83,24 @@ int main(int args, char *argv[]){
 {
 	#pragma omp single
 	{
-		put_queen(mat,queens,0);
+		if (rank != 0){
+			put_queen(mat,rank-1,0);
+			MPI_Send(&solutions, 1, MPI_INT, 0, 0, MPI_COMM_WORLD);
+		}else{
+			for(int i = 0; i < size; i++){
+				int answer;
+				MPI_Recv(&answer, 1, MPI_INT, MPI_ANY_SOURCE,0,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
+				solutions += answer;
+			}
+		}
 	}
 }
-	}
+}
 // End of parallel region
 
 	t = clock() - t;
 	time = ((double)t)/CLOCKS_PER_SEC;
-	
+
 	printf("--------------------------------------------\n");
     	printf("Solved!\n");
 	printf("Solutions: %d\n", solutions);
@@ -108,7 +114,6 @@ int main(int args, char *argv[]){
 #endif
 	printf("Time(in seconds): %f\n", time);
 	
-	
 	return 0;
 }
 
@@ -117,7 +122,6 @@ int main(int args, char *argv[]){
 void put_queen(int **mat, int queens, int positioned){
 	int i,j;
 	if (positioned == queens){
-		//show_board(mat, queens);
 		#pragma omp critical
 		{
 			++solutions;
@@ -166,16 +170,3 @@ bool check_queen(int **mat, int queens, int pos, int column){
 
 }
 
-/*
-// Show board of one solution
-void show_board(int **mat , int queens){
-	int i,j;
-	for (i = 0; i < queens; i++){
-		for (j = 0; j < queens; j++){
-			printf("[%d]", mat[i][j]);
-		}
-		printf("\n");
-	}
-	printf("\n");
-}
-*/

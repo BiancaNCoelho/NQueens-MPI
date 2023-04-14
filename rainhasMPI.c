@@ -110,7 +110,7 @@ int main(int args, char *argv[]){
 			for(int i = 0; i < size-1; i++){
 				int answer;
 				MPI_Recv(&answer, 1, MPI_INT, MPI_ANY_SOURCE,0,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
-				solutions += answer;
+				solutions = answer;
 			}
 			t0 = clock() - t0;
 			time = ((double)t0)/CLOCKS_PER_SEC;

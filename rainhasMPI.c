@@ -29,7 +29,7 @@ int main(int args, char *argv[]){
 	}
 	
 	int queens, threads;
-	int rank, size; 
+	int rank, size, provided; 
 	int **mat;
 	int i,j;
 	double time;
@@ -53,10 +53,11 @@ int main(int args, char *argv[]){
 //defining OMP MPI or sequential
 #ifdef _OPENMP
 	omp_set_num_threads(threads);
-	MPI_Init_thread(&argc,&argv,); // initialize MPI
-	MPI_Comm_size(MPI_COMM_WORLD, &size); /* get number of processes
+	MPI_Init_thread(&args,&argv,MPI_THREAD_FUNNELED, &provided); /* initialize MPI thread 
+									MPI_Init() -> THREAD_SINGLE*/	
+	MPI_Comm_size(MPI_COMM_WORLD, &size); /* get number of processes --
 							returns the total number of processes*/
-	MPI_Comm_rank(MPI_COMM_WORLD, &rank); /* get current process id
+	MPI_Comm_rank(MPI_COMM_WORLD, &rank); /* get current process id --
 						 returns the rank of the calling MPI process */
 #endif	
 	

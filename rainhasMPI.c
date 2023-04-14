@@ -9,10 +9,10 @@
 #include <stdbool.h>
 #include <time.h>
 #include <pthread.h>
+#include <mpi.h>
 
 #ifdef _OPENMP
 	#include <omp.h>
-	#include <mpi.h>
 #endif
 
 bool check_queen(int **mat, int queens, int row, int column);
@@ -31,8 +31,8 @@ int main(int args, char *argv[]){
 	int rank, size; 
 	int **mat;
 	int i,j;
-	double time;
-	clock_t t;
+	double time, time0;
+	clock_t t0,tt;
 	
 	queens = atoi(argv[1]);
 	threads = atoi(argv[2]);
@@ -51,28 +51,51 @@ int main(int args, char *argv[]){
 	
 //defining OMP-MPI or sequential
 #ifdef _OPENMP
-	omp_set_num_threads(threads); // set number of threads
-	MPI_Init(&args,&argv); /* initialize MPI thread 
-				MPI_Init() -> THREAD_SINGLE*/	
-	MPI_Comm_size(MPI_COMM_WORLD, &size); /* get number of processes --
-							returns the total number of processes*/
-	MPI_Comm_rank(MPI_COMM_WORLD, &rank); /* get current process id --
-						 returns the rank of the calling MPI process */
+	omp_set_num_threads(threads); // set number of threads of OpenMP
 #endif	
+	MPI_Init(&args,&argv); /* initialize MPI 
+				MPI_Init() -> THREAD_SINGLE*/	
+	MPI_Comm_size(MPI_COMM_WORLD, &size); /* get number of nodes --
+						returns the total number of nodes*/
+	MPI_Comm_rank(MPI_COMM_WORLD, &rank); /* get current node id --
+						 returns the rank of the calling MPI node */
 	printf("--------------------------------------------\n");
     	printf("Solving N-Queen\n");
     	printf("--------------------------------------------\n");
     	
-	t = clock();
+	tt = clock();
 	// SOLUTION IS SIMPLE FOR N = 1
 	if(queens == 1 ){
 		++solutions;
 		mat[0][0] = 1;
+		tt = clock() - tt;
+		time0 = ((double)tt)/CLOCKS_PER_SEC;
+		printf("Solutions: %d\n", solutions);
+		printf("Queens : %d\n", queens);
+		printf("Board size: %d\n", queens*queens);
+#ifdef _OPENMP
+		printf("Number of threads: %d\n", threads);
+#else
+		printf("Number of threads: %d\n", 0);
+#endif
+		printf("Time(in seconds): %f\n", time0);
+		
 	}
 	
 	// DOES NOT EXIST A SOLUTION FOR N = 2 AND N = 3
 	if(queens == 2 || queens == 3){
 		solutions = 0;
+		tt = clock() - tt;
+		time0 = ((double)tt)/CLOCKS_PER_SEC;
+		printf("Solutions: %d\n", solutions);
+		printf("Queens : %d\n", queens);
+		printf("Board size: %d\n", queens*queens);
+#ifdef _OPENMP
+		printf("Number of threads: %d\n", threads);
+#else
+		printf("Number of threads: %d\n", 0);
+#endif
+		printf("Time(in seconds): %f\n", time0);
 	}
 	
 	// CASE N > 3, CACULATE THE NUMBER OF SOLUTIONS POSSIBLE AND PRINT BOARD
@@ -86,31 +109,33 @@ int main(int args, char *argv[]){
 			put_queen(mat,queens,0);
 			MPI_Send(&solutions, 1, MPI_INT, 0, 0, MPI_COMM_WORLD);
 		}else{
+			t0 = clock();
 			for(int i = 0; i < size-1; i++){
 				int answer;
 				MPI_Recv(&answer, 1, MPI_INT, MPI_ANY_SOURCE,0,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
 				solutions += answer;
 			}
+			t0 = clock() - t0;
+			time = ((double)t0)/CLOCKS_PER_SEC;
+			printf("--------------------------------------------\n");
+		    	printf("Solved!\n");
+			printf("Solutions: %d\n", solutions);
+			printf("Queens : %d\n", queens);
+			printf("Board size: %d\n", queens*queens);
+#ifdef _OPENMP
+			printf("Number of threads: %d\n", threads);
+#else
+			printf("Number of threads: %d\n", 0);
+#endif
+			printf("Time(in seconds): %f\n", time);
 		
 		}
 	}
 }
 }
 // End of parallel region
-	t = clock() - t;
-	time = ((double)t)/CLOCKS_PER_SEC;
-	printf("--------------------------------------------\n");
-    	printf("Solved!\n");
-	printf("Solutions: %d\n", solutions);
-	printf("Queens : %d\n", queens);
-	printf("Board size: %d\n", queens*queens);
-#ifdef _OPENMP
-	printf("Number of threads: %d\n", threads);
+	
 	MPI_Finalize();
-#else
-	printf("Number of threads: %d\n", 0);
-#endif
-	printf("Time(in seconds): %f\n", time);
 	
 	return 0;
 }

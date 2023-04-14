@@ -59,9 +59,6 @@ int main(int args, char *argv[]){
 						returns the total number of nodes*/
 	MPI_Comm_rank(MPI_COMM_WORLD, &rank); /* get current node id --
 						 returns the rank of the calling MPI node */
-	printf("--------------------------------------------\n");
-    	printf("Solving N-Queen\n");
-    	printf("--------------------------------------------\n");
     	
 	tt = clock();
 	// SOLUTION IS SIMPLE FOR N = 1

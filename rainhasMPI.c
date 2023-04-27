@@ -138,6 +138,7 @@ int main(int args, char *argv[]){
 
 
 // Put a queen in the board
+// Done with Backtracking and queens put by row
 void put_queen(int **mat, int queens, int positioned){
 	int i,j;
 	if (positioned == queens){

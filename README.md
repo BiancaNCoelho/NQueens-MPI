@@ -14,8 +14,6 @@ Compile:
  
 Run:
  
- > mpirun -np numberOfProcessors ./rainhasMPI numberOfQueens numberOfThreads
- 
  > mpirun --host localhost: numberOfNOdes ./rainhasMPI numberOfQueens numberOfThreads
  
 # Contributor(s)
